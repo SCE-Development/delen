@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+  api:
+    container_name: 'api_test'
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - '8000:8000'
+

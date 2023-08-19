@@ -7,6 +7,7 @@ RUN npm install child_process
 RUN npm install ytdl-core
 RUN npm install path
 
+RUN apk add alsa-utils alsa-lib alsa-plugins jack
 RUN apk add mpv
 
 EXPOSE 8000

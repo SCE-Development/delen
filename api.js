@@ -42,13 +42,27 @@ const streamYouTubeAudio = async (url) => {
         playing = true;
         audioStream.pipe(mpv.stdin);
 
+        mpv.stdin.on('data', (data) => {
+            console.log(`stdin: ${data}`);
+        });
+
+        mpv.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+        });
+
+        mpv.on('error', (err) => {
+            console.log(`mpv error: ${err}`);
+        });
+
         mpv.on('close', (code) => {
-            console.log(`aplay process exited with code ${code}`);
+            console.log(`mpv process exited with code ${code}`);
             playing = false;
             if (queue.length > 0) {
-                streamYoutubeAudio(queue.shift());
+                streamYouTubeAudio(queue.shift());
             }
         });
+
+
     } catch (error) {
         console.error('Error streaming audio:', error);
         playing = false;

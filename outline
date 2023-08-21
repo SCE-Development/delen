@@ -1,0 +1,9 @@
+Frontend takes in youtube url
+
+send to container,
+  container stream
+   > find /lib file to play through speakers
+  if currently streaming
+    enqueue url 
+  while queue
+    stream(queue.pop)

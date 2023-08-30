@@ -29,8 +29,11 @@ app.get('/pause', async (req, res) => {
 });
 
 app.get('/resume', async (req, res) => {
-  if (audioStream.isPlaying() || !audioStream.isPaused()) {
+  if (audioStream.isPlaying() && !audioStream.isPaused()) {
     return res.status(400).json({ error: 'Already playing. '});
+  }
+  if (!audioStream.isPlaying()) {
+    return res.status(400).json({ error: 'Cannot resume. Stream is not playing.' });
   }
   audioStream.resume();
   res.status(200).json('Resumed.');
@@ -44,7 +47,7 @@ app.get('/skip', async (req, res) => {
   res.status(200).json('Skipped.');
 });
 
-app.get('/queue', async (req, res) => {
+app.get('/queued', async (req, res) => {
   return res.status(200).json({ queue: audioStream.getQueue() });
 });
 

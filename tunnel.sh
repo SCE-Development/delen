@@ -55,14 +55,14 @@ ssh_tunnel_arg() {
   local index="$1"
   if [[ ${all_args[index]} == "start" ]]
   then
-    echo "starting tunnel..."
+    echo -e "\e[0;33m🔥Starting tunnel🔥\e[0m"
     start_ssh_tunnel
   elif [[ ${all_args[index]} == "stop" ]]
   then
-    echo "closing tunnel..."
+    echo -e "\e[0;33m☹️ Stopping tunnel☹️\e[0m"
     stop_ssh_tunnel
   else
-    echo "not a valid command"
+    echo -e "\e[0;31mNot a valid command\e[0m"
     exit 1
   fi
 }
@@ -85,8 +85,14 @@ start_ssh_tunnel () {
     -o UserKnownHostsFile=${DOCKER_CONTAINER_KNOWN_HOSTS} \
     -o StrictHostKeyChecking=no \
     -i ${DOCKER_CONTAINER_SSH_KEYS} \
-    -f -g -N -R 0.0.0.0:${CORE_V4_PORT}:localhost:${QUASAR_PORT} ${CORE_V4_HOST}
-    echo Listening on port ${QUASAR_PORT}
+    -f -g -N -R 0.0.0.0:${CORE_V4_PORT}:localhost:${QUASAR_PORT} ${CORE_V4_HOST} >/dev/null 2>&1
+    if [[ $? -eq 0 ]]
+    then
+      echo -e "\e[0;34mListening on port\e[0m" "\e[0;35m${QUASAR_PORT} 🥶\e[0m"
+    else
+      echo -e "\e[0;31m☹️Error\e[0m"
+    fi
+
 }
 
 stop_ssh_tunnel () {
@@ -97,14 +103,14 @@ api_arg() {
   local index="$1"
   if [[ ${all_args[index]} == "start" ]]
   then
-    echo "starting api..."
+    echo -e "\e[0;33m🔥Starting api🔥\e[0m"
     start_api
   elif [[ ${all_args[index]} == "stop" ]]
   then
-    echo "stopping api..."
+    echo -e "\e[0;33m☹️Stopping api\e[0m"
     stop_api
   else
-    echo "not a valid command"
+    echo -e "\e[0;33mNot a valid command\e[0m"
     exit 1
   fi
 }
@@ -118,4 +124,3 @@ stop_api() {
 }
 
 choose_startup
-

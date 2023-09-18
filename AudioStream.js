@@ -4,7 +4,7 @@ const { exec } = require('child_process');
 let PAUSE = 'echo \'{ "command": ["set_property", "pause", true] }\' | socat - /tmp/mpvsocket'
 let RESUME = 'echo \'{ "command": ["set_property", "pause", false] }\' | socat - /tmp/mpvsocket'
 let PLAY = 'mpv --no-video --force-window=no --input-ipc-server=/tmp/mpvsocket -'
-let KILL = 'killall mpv'
+let KILL = 'killall mpv && killall ytdl'
 
 module.exports = class AudioStream {
   constructor() {
@@ -34,8 +34,12 @@ module.exports = class AudioStream {
       this.playing = true;
       this.ytdl.pipe(this.mpv.stdin);
 
-      await this.mpv.on('close', (code) => {
-        this.playNext();
+      this.mpv.stdout.on('data', (data) => {
+        if(data.toString().includes("End of file")){
+          this.playing  = false
+          this.paused = false
+          this.playNext() 
+        }
       });
     } catch (error) {
       console.error('Error streaming audio:', error);
@@ -71,16 +75,7 @@ module.exports = class AudioStream {
     this.ytdl.destroy();
     await new Promise(r => setTimeout(r, 2000)); // lets see if this work
     this.mpv.kill();
-    exec(KILL, (error, stderr) => {
-      if (error) {
-          console.log(`error: ${error.message}`);
-          return;
-      }
-      if (stderr) {
-          console.log(`stderr: ${stderr}`);
-          return;
-      }
-  });
+    exec(KILL)
     this.playing = false;
     this.playNext();
   }

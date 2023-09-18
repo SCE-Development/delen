@@ -1,5 +1,10 @@
 const ytdl = require('ytdl-core');
-const { spawn } = require('child_process');
+const { exec } = require('child_process');
+
+let PAUSE = 'echo \'{ "command": ["set_property", "pause", true] }\' | socat - /tmp/mpvsocket'
+let RESUME = 'echo \'{ "command": ["set_property", "pause", false] }\' | socat - /tmp/mpvsocket'
+let PLAY = 'mpv --no-video --force-window=no --input-ipc-server=/tmp/mpvsocket -'
+let KILL = 'killall mpv'
 
 module.exports = class AudioStream {
   constructor() {
@@ -7,8 +12,7 @@ module.exports = class AudioStream {
     this.playing = false;
     this.paused = false;
     this.ytdl = null;
-    this.ffmpeg = null;
-    this.ffplay = null;
+    this.mpv = null;
   }
 
   async streamYouTubeAudio(url) {
@@ -20,32 +24,17 @@ module.exports = class AudioStream {
     try {
       console.log(`Now Playing: ${url}`);
 
+      if(this.ytdl != null){
+        this.ytdl.end();
+        this.ytdl.destroy();
+      }
+
       this.ytdl = ytdl(url, { filter: 'audioonly' });
-      this.ffmpeg = spawn('ffmpeg', [ '-i', 'pipe:0', '-ar', '48000', '-f', 'wav', '-b:a', '256','-ac', '2', 'pipe:1' ]);
-      this.ffplay = spawn('ffplay', [ '-i', 'pipe:0', '-nodisp', '-autoexit' ]);
-
+      this.mpv = exec(PLAY)
       this.playing = true;
+      this.ytdl.pipe(this.mpv.stdin);
 
-      this.ytdl.pipe(this.ffmpeg.stdin);
-      this.ffmpeg.stdout.pipe(this.ffplay.stdin);
-
-      this.ffmpeg.on('error', (err) => {
-        console.log(`ffmpeg error: ${err}`);
-      });
-
-      this.ffplay.on('error', (err) => {
-        console.log(`ffplay error: ${err}`);
-      });
-
-      this.ffmpeg.on('close', (code) => {
-        console.log(`ffmpeg process exited with code ${code}`);
-        this.ffplay.kill();
-      });
-
-      this.ffplay.on('close', (code) => {
-        console.log(`ffplay process exited with code ${code}`);
-
-        this.playing = false;
+      await this.mpv.on('close', (code) => {
         this.playNext();
       });
     } catch (error) {
@@ -54,37 +43,44 @@ module.exports = class AudioStream {
     }
   }
 
-  pause() {
+  async pause() {
     if (!this.paused) {
       this.ytdl.pause();
-      this.ffmpeg.kill('SIGSTOP');
-      this.ffplay.kill('SIGSTOP');
+      exec(PAUSE)
       this.paused = true;
       console.log('Paused.');
     }
   }
 
-  resume() {
+  async resume() {
     if (this.paused) {
       this.ytdl.resume();
-      this.ffmpeg.kill('SIGCONT');
-      this.ffplay.kill('SIGCONT');
+      exec(RESUME)
       this.paused = false;
       console.log('Resumed.');
     }
   }
 
-  skip() {
-    //resume paused stream before killing everything
+  async skip() {
+    // Resume paused stream before killing everything
     if (this.paused) {
       this.ytdl.resume();
-      this.ffmpeg.kill('SIGCONT');
-      this.ffplay.kill('SIGCONT');
     }
 
     this.ytdl.end();
     this.ytdl.destroy();
-
+    await new Promise(r => setTimeout(r, 2000)); // lets see if this work
+    this.mpv.kill();
+    exec(KILL, (error, stderr) => {
+      if (error) {
+          console.log(`error: ${error.message}`);
+          return;
+      }
+      if (stderr) {
+          console.log(`stderr: ${stderr}`);
+          return;
+      }
+  });
     this.playing = false;
     this.playNext();
   }
@@ -106,3 +102,5 @@ module.exports = class AudioStream {
     return this.queue;
   }
 }
+
+

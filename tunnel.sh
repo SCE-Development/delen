@@ -13,14 +13,13 @@ DOCKER_CONTAINER_SSH_KEYS=~/.ssh/id_rsa
 # # This is the port on Core-v4 that will be forwarded into the conn
 # # container (try curl localhost:CORE_V4_PORT in Core-v4). Software responisble
 # # to check health checks, on Core-v4 will communicate with the container
-# # through Core-v4's localhost:CORE_V4_PORT.
+# # through Core-v4's localhost:CORE_V4_PORT
 
-CORE_V4_PORT=16000
+CORE_V4_PORT=18000
 
-QUASAR_PORT=6000
+QUASAR_PORT=8000
 
 CORE_V4_HOST=sce@${CORE_V4_IP}
-
 
 
 num_args=$#
@@ -107,7 +106,7 @@ api_arg() {
     start_api
   elif [[ ${all_args[index]} == "stop" ]]
   then
-    echo -e "\e[0;33m☹️Stopping api\e[0m"
+    echo -e "\e[0;33m🤨topping api😲\e[0m"
     stop_api
   else
     echo -e "\e[0;33mNot a valid command\e[0m"
@@ -116,11 +115,11 @@ api_arg() {
 }
 
 start_api() {
-  python3 ./api.py
+  node ./api.js > /dev/null 2>&1 &
 }
 
 stop_api() {
-  kill -QUIT $(pgrep -f ./api.py)
+  kill -9 $(pgrep -f ./api.js)
 }
 
 choose_startup

@@ -9,7 +9,7 @@ let audioStream = new AudioStream();
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Endpoint to fetch video info from YouTube URL
-app.get('/stream', async (req, res) => {
+app.post('/stream', async (req, res) => {
   try {
     const videoUrl = req.query.url;
     audioStream.streamYouTubeAudio(videoUrl);
@@ -39,7 +39,7 @@ app.get('/resume', async (req, res) => {
   res.status(200).json('Resumed.');
 });
 
-app.get('/skip', async (req, res) => {
+app.post('/skip', async (req, res) => {
   if (audioStream.getQueue().length == 0 && !audioStream.isPlaying()) {
     return res.status(400).json({ error: 'Nothing in queue!' });
   }

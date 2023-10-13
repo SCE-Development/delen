@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const path = require('path');
+const bodyParser = require('body-parser');
 
 const AudioStream = require('./AudioStream')
 let audioStream = new AudioStream();
@@ -9,9 +10,9 @@ let audioStream = new AudioStream();
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Endpoint to fetch video info from YouTube URL
-app.post('/stream', async (req, res) => {
+app.post('/stream', bodyParser.json(), async (req, res) => {
   try {
-    const videoUrl = req.query.url;
+    const videoUrl = req.body.url;
     audioStream.streamYouTubeAudio(videoUrl);
     
     res.json({ playing: audioStream.isPlaying() });
@@ -20,7 +21,7 @@ app.post('/stream', async (req, res) => {
   }
 });
 
-app.get('/pause', async (req, res) => {
+app.post('/pause', async (req, res) => {
   if (!audioStream.isPlaying() || audioStream.isPaused()) {
     return res.status(400).json({ error: 'Cannot pause. Stream is not playing.' });
   }
@@ -28,7 +29,7 @@ app.get('/pause', async (req, res) => {
   res.status(200).json('Paused.');
 });
 
-app.get('/resume', async (req, res) => {
+app.post('/resume', async (req, res) => {
   if (audioStream.isPlaying() && !audioStream.isPaused()) {
     return res.status(400).json({ error: 'Already playing. '});
   }

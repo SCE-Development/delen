@@ -115,7 +115,7 @@ api_arg() {
 }
 
 start_api() {
-  node ./api.js > /dev/null 2>&1 &
+  node ./api.js &
 }
 
 stop_api() {

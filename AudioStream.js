@@ -36,6 +36,7 @@ module.exports = class AudioStream {
 
       this.mpv.stdout.on('data', (data) => {
         if(data.toString().includes("End of file")){
+          console.log("H")
           this.playing  = false
           this.paused = false
           this.playNext() 
@@ -79,6 +80,42 @@ module.exports = class AudioStream {
     this.playing = false;
     this.playNext();
   }
+
+  async updateSign(url) {
+    axios.post(
+      'http://192.168.69.143/api/update-sign',
+        {
+          'text': this.getTitle(url),
+          'scrollSpeed': '25',
+          'backgroundColor': '#0000ff',
+          'textColor': '#00ff00',
+          'borderColor': '#ff0000',
+          'email': 'sceadmin@sjsu.edu',
+          'firstName': 'SCE'
+        },
+        {
+          headers: {
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Connection': 'keep-alive',
+            'Sec-Fetch-Dest': 'empty',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Site': 'same-origin',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"macOS"'
+          }
+        }
+      );
+    }
+
+  async getTitle(url) {
+    try {
+        const response = await axios.get(`${pee}?url=${encodeURIComponent(url)}`);
+        return JSON.stringify(response.data).title;
+    } catch (error) {
+        throw error;
+    }
+  };
+
 
   playNext() {
     if (this.queue.length > 0)

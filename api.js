@@ -1,50 +1,60 @@
 const express = require('express');
 const app = express();
 const path = require('path');
-const ytdl = require('ytdl-core');
-const { spawn } = require('child_process')
+const bodyParser = require('body-parser');
 
-let playing = false;
+const AudioStream = require('./AudioStream')
+let audioStream = new AudioStream();
 
-// Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Endpoint to fetch video info from YouTube URL
-app.get('/stream', async (req, res) => {
-    try {
-        const videoUrl = req.query.url;
-        streamYouTubeAudio(videoUrl);
-        
-        res.json(playing);
-    } catch (error) {
-        res.status(500).json({ error: 'An error occurred while fetching video info.' });
-    }
+app.post('/stream', bodyParser.json(), async (req, res) => {
+  try {
+    const videoUrl = req.body.url;
+    audioStream.streamYouTubeAudio(videoUrl);
+    
+    res.json({ playing: audioStream.isPlaying() });
+  } catch (error) {
+    res.status(500).json({ error: 'An error occurred while fetching video info.' });
+  }
 });
 
-// Start the server
+app.post('/pause', async (req, res) => {
+  if (!audioStream.isPlaying() || audioStream.isPaused()) {
+    return res.status(400).json({ error: 'Cannot pause. Stream is not playing.' });
+  }
+  audioStream.pause();
+  res.status(200).json('Paused.');
+});
+
+app.post('/resume', async (req, res) => {
+  if (audioStream.isPlaying() && !audioStream.isPaused()) {
+    return res.status(400).json({ error: 'Already playing. '});
+  }
+  if (!audioStream.isPlaying()) {
+    return res.status(400).json({ error: 'Cannot resume. Stream is not playing.' });
+  }
+  audioStream.resume();
+  res.status(200).json('Resumed.');
+});
+
+app.post('/skip', async (req, res) => {
+  if (audioStream.getQueue().length == 0 && !audioStream.isPlaying()) {
+    return res.status(400).json({ error: 'Nothing in queue!' });
+  }
+  audioStream.skip();
+  res.status(200).json('Skipped.');
+});
+
+app.get('/queued', async (req, res) => {
+  return res.status(200).json({ queue: audioStream.getQueue() });
+});
+
+app.get('/healthCheck', async (req, res) => {
+  return res.status(200).json({ success: 'True' });
+});
+
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-
-const streamYouTubeAudio = async (url) => {
-    if (playing) {
-        return;
-    }
-    try {
-        const audioStream = ytdl(url, { filter: 'audioonly' });
-
-        const mpv = spawn('mpv', ['-']);
-        playing = true;
-        audioStream.pipe(mpv.stdin);
-
-        mpv.on('close', (code) => {
-            console.log(`aplay process exited with code ${code}`);
-            playing = false;
-        });
-    } catch (error) {
-        console.error('Error streaming audio:', error);
-        playing = false;
-    }
-};
-

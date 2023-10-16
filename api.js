@@ -6,10 +6,8 @@ const bodyParser = require('body-parser');
 const AudioStream = require('./AudioStream')
 let audioStream = new AudioStream();
 
-// Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Endpoint to fetch video info from YouTube URL
 app.post('/stream', bodyParser.json(), async (req, res) => {
   try {
     const videoUrl = req.body.url;
@@ -52,7 +50,10 @@ app.get('/queued', async (req, res) => {
   return res.status(200).json({ queue: audioStream.getQueue() });
 });
 
-// Start the server
+app.get('/healthCheck', async (req, res) => {
+  return res.status(200).json({ success: 'True' });
+});
+
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

@@ -29,7 +29,7 @@ app.post('/setVolume', bodyParser.json(), async (req, res) => {
     audioStream.setVolume(volume);
     res.status(200).json({ volume: volume });
   } catch (error) {
-    res.status(500).json({ error: 'An error occurred while setting volume.' });
+    res.status(500).json({ error: 'An error occurred while setting volume. Please make sure that volume is between 0 and 100.' });
   }
 });
 

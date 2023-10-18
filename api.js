@@ -19,6 +19,24 @@ app.post('/stream', bodyParser.json(), async (req, res) => {
   }
 });
 
+/**
+ * /setVolume post request expects the following JSON body:
+ * @param {number} volume - The volume to set the stream to. Must be between 0 and 100.
+ */
+app.post('/setVolume', bodyParser.json(), async (req, res) => {
+  try {
+    const volume = req.body.volume;
+    audioStream.setVolume(volume);
+    res.status(200).json({ volume: volume });
+  } catch (error) {
+    res.status(500).json({ error: 'An error occurred while setting volume.' });
+  }
+});
+
+app.get('/volume', async (req, res) =>
+  res.status(200).json({ volume: audioStream.getVolume() })
+);
+
 app.post('/pause', async (req, res) => {
   if (!audioStream.isPlaying() || audioStream.isPaused()) {
     return res.status(400).json({ error: 'Cannot pause. Stream is not playing.' });

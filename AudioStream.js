@@ -8,6 +8,8 @@ let RESUME = 'echo \'{ "command": ["set_property", "pause", false] }\' | socat -
 let PLAY = 'mpv --no-video --force-window=no --input-ipc-server=/tmp/mpvsocket -'
 let KILL = 'killall mpv && killall ytdl'
 let BASE_URL = "https://www.youtube.com/oembed";
+// can be found with `sudo amixer controls`
+const PCM_VOLUME_ID = 4;
 
 module.exports = class AudioStream {
   constructor() {
@@ -16,6 +18,8 @@ module.exports = class AudioStream {
     this.paused = false;
     this.ytdl = null;
     this.mpv = null;
+    this.volume = 50;
+    this.setVolume(this.volume);
   }
 
   async updateSign(url) {
@@ -143,6 +147,13 @@ module.exports = class AudioStream {
   getQueue() {
     return this.queue;
   }
+
+  getVolume() {
+    return this.volume;
+  }
+
+  setVolume(volume) {
+    this.volume = volume;
+    exec(`sudo amixer cset numid=${PCM_VOLUME_ID} ${volume}%`)
+  }
 }
-
-

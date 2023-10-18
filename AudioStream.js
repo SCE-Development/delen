@@ -154,6 +154,9 @@ module.exports = class AudioStream {
   }
 
   setVolume(volume) {
+    if (volume <= 0 || volume >= 100) {
+      throw new Error('Volume must be between 0 and 100.');
+    }
     this.volume = volume;
     exec(`sudo amixer cset numid=${PCM_VOLUME_ID} ${volume}%`)
   }

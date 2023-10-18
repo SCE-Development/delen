@@ -10,6 +10,7 @@ let KILL = 'killall mpv && killall ytdl'
 let BASE_URL = "https://www.youtube.com/oembed";
 // can be found with `sudo amixer controls`
 const PCM_VOLUME_ID = 4;
+const INITIAL_VOLUME = 80;
 
 module.exports = class AudioStream {
   constructor() {
@@ -18,7 +19,7 @@ module.exports = class AudioStream {
     this.paused = false;
     this.ytdl = null;
     this.mpv = null;
-    this.volume = 50;
+    this.volume = INITIAL_VOLUME;
     this.setVolume(this.volume);
   }
 

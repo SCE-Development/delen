@@ -25,11 +25,17 @@ app.post('/stream', bodyParser.json(), async (req, res) => {
  */
 app.post('/setVolume', bodyParser.json(), async (req, res) => {
   try {
-    const volume = req.body.volume;
+    const volume = Number(req.body.volume);
+    if (volume <= 0 || volume >= 100) {
+      return res.status(400).json({ error: 'Volume must be between 0 and 100.' });
+    }
+    if (Number.isNaN(volume)) {
+      return res.status(400).json({ error: 'Volume must be a number.' });
+    }
     audioStream.setVolume(volume);
     res.status(200).json({ volume: volume });
   } catch (error) {
-    res.status(500).json({ error: 'An error occurred while setting volume. Please make sure that volume is between 0 and 100.' });
+    res.status(500).json({ error: 'An error occurred while setting volume.' });
   }
 });
 

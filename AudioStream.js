@@ -153,6 +153,10 @@ module.exports = class AudioStream {
     return this.volume;
   }
 
+  /**
+    * Sets the volume of the Raspberry pi via amixer.
+   * @param volume - The volume to set the stream to. Must be between 0 and 100. 
+   */
   setVolume(volume) {
     this.volume = volume;
     exec(`sudo amixer cset numid=${PCM_VOLUME_ID} ${volume}%`)

@@ -33,14 +33,14 @@ app.post('/setVolume', bodyParser.json(), async (req, res) => {
       return res.status(400).json({ error: 'Volume must be a number.' });
     }
     audioStream.setVolume(volume);
-    res.status(200).json({ volume: volume });
+    res.json({ volume: volume });
   } catch (error) {
     res.status(500).json({ error: 'An error occurred while setting volume.' });
   }
 });
 
 app.get('/volume', async (req, res) =>
-  res.status(200).json({ volume: audioStream.getVolume() })
+  res.json({ volume: audioStream.getVolume() })
 );
 
 app.post('/pause', async (req, res) => {
@@ -48,7 +48,7 @@ app.post('/pause', async (req, res) => {
     return res.status(400).json({ error: 'Cannot pause. Stream is not playing.' });
   }
   audioStream.pause();
-  res.status(200).json('Paused.');
+  res.json('Paused.');
 });
 
 app.post('/resume', async (req, res) => {
@@ -59,7 +59,7 @@ app.post('/resume', async (req, res) => {
     return res.status(400).json({ error: 'Cannot resume. Stream is not playing.' });
   }
   audioStream.resume();
-  res.status(200).json('Resumed.');
+  res.json('Resumed.');
 });
 
 app.post('/skip', async (req, res) => {
@@ -67,15 +67,15 @@ app.post('/skip', async (req, res) => {
     return res.status(400).json({ error: 'Nothing in queue!' });
   }
   audioStream.skip();
-  res.status(200).json('Skipped.');
+  res.json('Skipped.');
 });
 
 app.get('/queued', async (req, res) => {
-  return res.status(200).json({ queue: audioStream.getQueue() });
+  return res.json({ queue: audioStream.getQueue() });
 });
 
 app.get('/healthCheck', async (req, res) => {
-  return res.status(200).json({ success: 'True' });
+  return res.json({ success: 'True' });
 });
 
 const PORT = process.env.PORT || 8000;

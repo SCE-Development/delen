@@ -44,7 +44,7 @@ module.exports = class AudioStream {
             }
         );
     } catch (error) {
-        throw error;
+        console.log(error);
     }
   }
 
@@ -53,7 +53,7 @@ module.exports = class AudioStream {
           const response = await axios.get(`${BASE_URL}?url=${encodeURIComponent(url)}`);
           return response.data.title;
       } catch (error) {
-          throw error;
+          console.log(error);
       }
   }
 
@@ -114,11 +114,18 @@ module.exports = class AudioStream {
     }
 
     this.ytdl.end();
+    console.log("here")
     this.ytdl.destroy();
+    console.log("here2")
     this.mpv.kill();
+    console.log("here3")
     exec(KILL)
+    console.log("here4")
     this.playing = false;
+    // Need to have a sleep statement otherwise it doesnt work 
+    await new Promise(r => setTimeout(r, 100)); 
     this.playNext();
+    console.log("here5")
   }
   
   // Example usage:

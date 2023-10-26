@@ -128,12 +128,6 @@ module.exports = class AudioStream {
     console.log("here5")
   }
   
-  // Example usage:
-  // (async () => {
-  //     const youtubeUrl = "https://www.youtube.com/watch?v=zXkbi-ddZXM&ab_channel=Reflekt-Topic";
-  //     await updateSign(youtubeUrl);
-  // })();
-
   playNext() {
     if (this.queue.length > 0)
       this.streamYouTubeAudio(this.queue.shift());

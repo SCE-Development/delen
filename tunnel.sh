@@ -23,43 +23,29 @@ CORE_V4_HOST=sce@${CORE_V4_IP}
 
 
 num_args=$#
-all_args=( "$@" )
+arg=$1
 
 check_valid_arg_amount() {
-  if [ "$((num_args%2))" -eq 1 ] || [ "$num_args" -gt 4 ];
+  if [ "$((num_args))" -ne 1 ];
   then
-    echo "usage: ./tunnel.sh --ssh-tunnel [start]/[stop] --api [start]/[stop]"
+    echo "Error: expected 1 argument only."
+    echo "usage: ./tunnel.sh [start]/[stop]"
     exit 1
   fi
 }
 
 choose_startup() {
   check_valid_arg_amount
-  for i in $( seq 0 $num_args);
-  do
-    if [[ ${all_args[i]} == "--ssh-tunnel" ]]
-    then
-      ssh_tunnel_arg "$(($i+1))"
-      i+=1
-    fi
-    if [[ ${all_args[i]} == "--api" ]]
-    then
-      api_arg "$(($i+1))"
-      i+=1
-    fi
-  done
-}
-
-ssh_tunnel_arg() {
-  local index="$1"
-  if [[ ${all_args[index]} == "start" ]]
-  then
+  if [[ ${arg} == "start" ]]; then
     echo -e "\e[0;33m🔥Starting tunnel🔥\e[0m"
     start_ssh_tunnel
-  elif [[ ${all_args[index]} == "stop" ]]
-  then
-    echo -e "\e[0;33m☹️ Stopping tunnel☹️\e[0m"
+    echo -e "\e[0;33m🔥Starting api🔥\e[0m"
+    start_api
+  elif [[ ${arg} == "stop" ]]; then
+    echo -e "\e[0;33m☹️Stopping tunnel☹️\e[0m"
     stop_ssh_tunnel
+    echo -e "\e[0;33m🤨Stopping api😲\e[0m"
+    stop_api
   else
     echo -e "\e[0;31mNot a valid command\e[0m"
     exit 1
@@ -96,22 +82,6 @@ start_ssh_tunnel () {
 
 stop_ssh_tunnel () {
   kill -QUIT $(pgrep -f localhost)
-}
-
-api_arg() {
-  local index="$1"
-  if [[ ${all_args[index]} == "start" ]]
-  then
-    echo -e "\e[0;33m🔥Starting api🔥\e[0m"
-    start_api
-  elif [[ ${all_args[index]} == "stop" ]]
-  then
-    echo -e "\e[0;33m🤨topping api😲\e[0m"
-    stop_api
-  else
-    echo -e "\e[0;33mNot a valid command\e[0m"
-    exit 1
-  fi
 }
 
 start_api() {

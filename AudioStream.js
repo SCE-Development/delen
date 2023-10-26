@@ -44,7 +44,7 @@ module.exports = class AudioStream {
             }
         );
     } catch (error) {
-        throw error;
+        console.log(error);
     }
   }
 
@@ -53,7 +53,7 @@ module.exports = class AudioStream {
           const response = await axios.get(`${BASE_URL}?url=${encodeURIComponent(url)}`);
           return response.data.title;
       } catch (error) {
-          throw error;
+          console.log(error);
       }
   }
 
@@ -78,7 +78,6 @@ module.exports = class AudioStream {
 
       this.mpv.stdout.on('data', (data) => {
         if(data.toString().includes("End of file")){
-          console.log("H")
           this.playing  = false
           this.paused = false
           this.playNext() 
@@ -118,15 +117,11 @@ module.exports = class AudioStream {
     this.mpv.kill();
     exec(KILL)
     this.playing = false;
+    // Need to have a sleep statement otherwise it doesnt work 
+    await new Promise(r => setTimeout(r, 100)); 
     this.playNext();
   }
   
-  // Example usage:
-  // (async () => {
-  //     const youtubeUrl = "https://www.youtube.com/watch?v=zXkbi-ddZXM&ab_channel=Reflekt-Topic";
-  //     await updateSign(youtubeUrl);
-  // })();
-
   playNext() {
     if (this.queue.length > 0)
       this.streamYouTubeAudio(this.queue.shift());

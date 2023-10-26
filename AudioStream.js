@@ -78,7 +78,6 @@ module.exports = class AudioStream {
 
       this.mpv.stdout.on('data', (data) => {
         if(data.toString().includes("End of file")){
-          console.log("H")
           this.playing  = false
           this.paused = false
           this.playNext() 
@@ -114,18 +113,13 @@ module.exports = class AudioStream {
     }
 
     this.ytdl.end();
-    console.log("here")
     this.ytdl.destroy();
-    console.log("here2")
     this.mpv.kill();
-    console.log("here3")
     exec(KILL)
-    console.log("here4")
     this.playing = false;
     // Need to have a sleep statement otherwise it doesnt work 
     await new Promise(r => setTimeout(r, 100)); 
     this.playNext();
-    console.log("here5")
   }
   
   playNext() {

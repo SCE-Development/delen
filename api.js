@@ -2,9 +2,22 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const bodyParser = require('body-parser');
+const client = require('prom-client');
 
 const AudioStream = require('./AudioStream')
 let audioStream = new AudioStream();
+
+let register = new client.Registry();
+const lastHealthCheckRequest = new client.Gauge({
+  name: "last_health_check_request",
+  help: "Timestamp of last HTTP GET /healthCheck"
+});
+register.registerMetric(lastHealthCheckRequest);
+register.setDefaultLabels({
+    app: 'sce-speaker'
+});
+
+client.collectDefaultMetrics({ register });
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -51,7 +64,13 @@ app.get('/queued', async (req, res) => {
 });
 
 app.get('/healthCheck', async (req, res) => {
+  lastHealthCheckRequest.set(Date.now());
   return res.status(200).json({ success: 'True' });
+});
+
+app.get('/metrics', async (_, response) => {
+  response.setHeader('Content-type', register.contentType);
+  response.end(await register.metrics());
 });
 
 const PORT = process.env.PORT || 8000;

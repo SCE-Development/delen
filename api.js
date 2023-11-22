@@ -2,11 +2,21 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const bodyParser = require('body-parser');
+const client = require('prom-client');
 
-const AudioStream = require('./AudioStream')
+let register = new client.Registry();
+
+const AudioStream = require('./AudioStream');
 let audioStream = new AudioStream();
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+const gauge = new client.Gauge({
+  name: 'last_time_checkypoo',
+  help: 'checks the last time the health check was checked',
+});
+register.registerMetric(gauge);
+client.collectDefaultMetrics({ register });
 
 app.post('/stream', bodyParser.json(), async (req, res) => {
   try {
@@ -51,7 +61,13 @@ app.get('/queued', async (req, res) => {
 });
 
 app.get('/healthCheck', async (req, res) => {
+  gauge.set(Date.now());
   return res.status(200).json({ success: 'True' });
+});
+
+app.get('/metrics', async (request, response) => {
+  response.setHeader('Content-type', register.contentType);
+  response.end(await register.metrics());
 });
 
 const PORT = process.env.PORT || 8000;

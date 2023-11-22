@@ -12,7 +12,7 @@ let audioStream = new AudioStream();
 app.use(express.static(path.join(__dirname, 'public')));
 
 const gauge = new client.Gauge({
-  name: 'last_time_checkypoo',
+  name: 'last_health_check_request',
   help: 'checks the last time the health check was checked',
 });
 register.registerMetric(gauge);
@@ -61,7 +61,7 @@ app.get('/queued', async (req, res) => {
 });
 
 app.get('/healthCheck', async (req, res) => {
-  gauge.set(Date.now());
+  gauge.set(Date.now() / 1000);
   return res.status(200).json({ success: 'True' });
 });
 

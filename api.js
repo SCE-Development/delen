@@ -6,7 +6,7 @@ const client = require('prom-client');
 
 let register = new client.Registry();
 
-const AudioStream = require('./testing');
+const AudioStream = require('./AudioStream');
 let audioStream = new AudioStream();
 
 app.use(express.static(path.join(__dirname, 'public')));

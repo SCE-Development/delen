@@ -13,6 +13,7 @@ module.exports = class AudioStream {
         this.current = 0
         this.PIDs = []
         this.totalQueue = []
+        this.lastSkipTime = 0;
     }
 
     newMPV(index) {
@@ -123,6 +124,7 @@ module.exports = class AudioStream {
                     if (!this.isPlaying) this.play()
                 }
                 if (data.toString().includes("Exiting") || data.toString().includes("underrun")) {
+                    exec(`rm -f /tmp/mpvsocket${this.current}`)
                     console.log('exiting')
                     this.isPlaying = false
                     this.PIDs.shift()
@@ -134,12 +136,18 @@ module.exports = class AudioStream {
     }
 
     skip() {
-        if (false) {
-            exec(`rm -f /tmp/mpvsocket${this.current} -`)
-            exec(`kill -9 ${this.PIDs.shift()}`)
+        const currentTime = Date.now();
+        const elapsedTime = currentTime - lastSkipTime;
+
+        if (elapsedTime < 30000) { // 30 seconds in milliseconds
+            return false; // If less than 30 seconds have passed since last call, return false
+        } else {
+            this.lastSkipTime = currentTime; // Update last skip time
+            exec(`kill -9 ${this.PIDs.shift()}`);
+            return true; // If 30 seconds or more have passed since last call, return true
         }
     }
-
+    
     getTotal() {
         return this.total
     }

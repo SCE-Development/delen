@@ -137,14 +137,14 @@ module.exports = class AudioStream {
 
     skip() {
         const currentTime = Date.now();
-        const elapsedTime = currentTime - lastSkipTime;
+        const elapsedTime = currentTime - this.lastSkipTime;
 
-        if (elapsedTime < 30000) { // 30 seconds in milliseconds
-            return false; // If less than 30 seconds have passed since last call, return false
+        if (elapsedTime < (30 * 1000)) { // 30 seconds put the amount of seconds you want on the left 
+            return false; 
         } else {
             this.lastSkipTime = currentTime; // Update last skip time
             exec(`kill -9 ${this.PIDs.shift()}`);
-            return true; // If 30 seconds or more have passed since last call, return true
+            return true; 
         }
     }
     

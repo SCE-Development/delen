@@ -37,7 +37,7 @@ app.get('/queued', async (req, res) => {
 app.post('/skip', async (req, res) => {
     let resp = audioStream.skip();
     if(resp == true) res.status(200).json({ 'resp ': resp });
-    else res.status(500).json({'resp' : 'please wait 30 seconds before skipping'})
+    else res.status(500).json({'resp' : 'please wait 10 seconds before skipping'})
 });
 
 app.post('/pause', async (req, res) => {

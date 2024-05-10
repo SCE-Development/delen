@@ -6,20 +6,21 @@ let PAUSE = 'echo \'{ "command": ["set_property", "pause", true] }\' | socat - /
 let RESUME = 'echo \'{ "command": ["set_property", "pause", false] }\' | socat - /tmp/mpvsocket'
 module.exports = class AudioStream {
     constructor() {
-        this.mpvs = []
-        this.queue = []
-        this.total = 0
-        this.isPlaying = false
-        this.current = 0
-        this.PIDs = []
-        this.totalQueue = []
-        this.lastSkipTime = 0;
+        this.mpvs = [] // buffered queue
+        this.queue = [] // total queue
+        this.total = 0 // used for pausing the buffered element
+        this.isPlaying = false // used to check if playing
+        this.current = 0 // used for pausing/playing
+        this.PIDs = [] // used for keeping track of PIDs
+        this.totalQueue = [] // used for the entire queue to display 
+        this.lastSkipTime = 0; // used to rate limit the skip 
+        this.currentPID = 0; // used to skip the current PID 
     }
 
     newMPV(index) {
-        let temp = exec(`mpv --no-video --force-window=no --input-ipc-server=/tmp/mpvsocket${index} -`)
+        let temp = exec(`mpv --cache=yes --pulse-buffer=2000 --cache-pause=yes --cache-pause-initial=yes --input-ipc-server=/tmp/mpvsocket${index} -`)
         this.PIDs.push(temp.pid)
-        console.log(temp.pid)
+        console.log(temp.pid, 'here')
         return temp
     }
 
@@ -48,6 +49,7 @@ module.exports = class AudioStream {
         return exec(`echo '{ "command": ["cycle", "pause"] }' | socat - /tmp/mpvsocket${this.current}`)
     }
 
+
     queueUp(url) {
         if(url.includes("playlist")){
             this.extractVideoIds(url)
@@ -72,7 +74,7 @@ module.exports = class AudioStream {
             if (tuple[1]) {
                 console.log('in here ')
                 this.resume(tuple[1])
-                console.log(this.PIDs)
+                console.log(this.PIDs, '76')
             }
             console.log(this.queue.length)
             if (this.queue.length > 0) this.buffer(this.queue.shift())
@@ -139,12 +141,12 @@ module.exports = class AudioStream {
         const currentTime = Date.now();
         const elapsedTime = currentTime - this.lastSkipTime;
 
-        if (elapsedTime < (30 * 1000)) { // 30 seconds put the amount of seconds you want on the left 
+        if (elapsedTime < (10 * 1000)) { // 30 seconds put the amount of seconds you want on the left 
             return false; 
         } else {
             this.lastSkipTime = currentTime; // Update last skip time
-            exec(`kill -9 ${this.PIDs.shift()}`);
-            return true; 
+            exec(`echo '{ "command": ["quit", "9"] }' | socat - /tmp/mpvsocket${this.current}`)
+            return true
         }
     }
     

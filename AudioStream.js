@@ -18,7 +18,7 @@ module.exports = class AudioStream {
     }
 
     newMPV(index) {
-        let temp = exec(`mpv --cache=yes --pulse-buffer=2000 --cache-pause=yes --cache-pause-initial=yes --input-ipc-server=/tmp/mpvsocket${index} -`)
+        let temp = exec(`mpv --cache=yes --no-video --force-window=no --cache-pause=yes --cache-pause-initial=yes --input-ipc-server=/tmp/mpvsocket${index} -`)
         this.PIDs.push(temp.pid)
         console.log(temp.pid, 'here')
         return temp
@@ -45,24 +45,38 @@ module.exports = class AudioStream {
         }
     }
 
+    rewind(){
+        return exec(`echo '{ "command": ["seek", -10] }' | socat - /tmp/mpvsocket${this.current}`)
+    }
+
+    forward(){
+        return exec(`echo '{ "command": ["seek", 5] }' | socat - /tmp/mpvsocket${this.current}`)
+    }
+
     togglePauseResume() {
         return exec(`echo '{ "command": ["cycle", "pause"] }' | socat - /tmp/mpvsocket${this.current}`)
     }
 
 
+
+    // This is the function that handles placing the urls into the queue
     queueUp(url) {
+        // if it is a playlist, run the function that gets each of the URLs
         if(url.includes("playlist")){
             this.extractVideoIds(url)
         }else{
+            // Otherwise we want to check if mpv array is less than 2, if it is, buffer it
             if (this.mpvs.length < 2) {
                 console.log('first if')
                 this.buffer(url)
             }
             else {
+                // otherwise just push it to the queue
                 console.log('second if')
                 this.queue.push(url)
                 console.log(this.queue)
             }
+            // add to total queue for displaying 
             this.totalQueue.push(url)
         }
     }
@@ -104,14 +118,17 @@ module.exports = class AudioStream {
         }
         for (const video of Array.from(s)) {
             this.queueUp(video)
-            // You can print something for each video ID here
         };
     }
 
 
+    // Function responsible for buffering the audio
     async buffer(url) {
+        // increase the total so know what it is Useful for later
         this.total += 1
+        // create a new mpv 
         let mpv = this.newMPV(this.total)
+        // push the MPV into the mpv queue 
         this.mpvs.push([mpv, this.total])
 
         let stream = ytdl(url, { filter: 'audioonly' });
@@ -141,7 +158,7 @@ module.exports = class AudioStream {
         const currentTime = Date.now();
         const elapsedTime = currentTime - this.lastSkipTime;
 
-        if (elapsedTime < (10 * 1000)) { // 30 seconds put the amount of seconds you want on the left 
+        if (elapsedTime < (30 * 1000)) { // 30 seconds put the amount of seconds you want on the left 
             return false; 
         } else {
             this.lastSkipTime = currentTime; // Update last skip time

@@ -45,6 +45,16 @@ app.post('/pause', async (req, res) => {
     res.status(200).json('Paused.');
 });
 
+app.post('/rewind', async (req, res) => {
+    audioStream.rewind();
+    res.status(200).json('Rewinded.');
+});
+
+app.post('/forward', async (req, res) => {
+    audioStream.forward();
+    res.status(200).json('forward.');
+});
+
 app.post('/resume', async (req, res) => {
     audioStream.resume();
     res.status(200).json('Resumed.');

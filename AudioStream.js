@@ -117,7 +117,6 @@ module.exports = class AudioStream {
         }
         for (const video of Array.from(s)) {
             this.queueUp(video)
-            // You can print something for each video ID here
         };
     }
 
@@ -158,7 +157,7 @@ module.exports = class AudioStream {
         const currentTime = Date.now();
         const elapsedTime = currentTime - this.lastSkipTime;
 
-        if (elapsedTime < (10 * 1000)) { // 30 seconds put the amount of seconds you want on the left 
+        if (elapsedTime < (30 * 1000)) { // 30 seconds put the amount of seconds you want on the left 
             return false; 
         } else {
             this.lastSkipTime = currentTime; // Update last skip time

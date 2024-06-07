@@ -15,6 +15,7 @@ module.exports = class AudioStream {
         this.totalQueue = [] // used for the entire queue to display 
         this.lastSkipTime = 0; // used to rate limit the skip 
         this.currentPID = 0; // used to skip the current PID 
+        this.apiKey = process.env.YOUTUBE_API_KEY;
     }
 
     newMPV(index) {
@@ -97,29 +98,44 @@ module.exports = class AudioStream {
         }
     }
 
-
-    async extractVideoIds(url) {
+    async extractVideoIdsFromPlaylist(playlistUrl){
+        
         const s = new Set();
-        try {
-            let temp = await fetch(url).then(res => res.text());
-            while (temp !== "") {
-                const ind = temp.indexOf('videoId');
-                if (temp.substring(ind, ind + 40).includes("videoId")) {
-                    const videoIdStart = ind + 10;
-                    const videoIdEnd = ind + 23;
-                    const videoId = temp.substring(videoIdStart, videoIdEnd).replace(/["\[\],]/g, "");
-                    console.log(temp.substring(ind, ind + 40))
-                    s.add("https://www.youtube.com/watch?v=" + videoId);
-                }
-                temp = temp.substring(ind + 21);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-        for (const video of Array.from(s)) {
-            this.queueUp(video)
-        };
-    }
+        const urlParams = new URLSearchParams(new URL(playlistUrl).search);
+        const playlistId = urlParams.get('list');
+      
+        let nextPageToken = '';
+          
+          try {
+              do {
+                  // Fetch playlist items from the YouTube Data API
+                  const response = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&pageToken=${nextPageToken}&key=${this.apiKey}`);
+                  const data = await response.json();
+                  
+                  if (data.error) {
+                      console.error('Error fetching playlist items:', data.error);
+                      return;
+                  }
+      
+                  // Extract video IDs and add them to the set
+                  data.items.forEach(item => {
+                      const videoId = item.contentDetails.videoId;
+                      s.add(`https://www.youtube.com/watch?v=${videoId}`);
+                  });
+      
+                  // Update nextPageToken for the next iteration
+                  nextPageToken = data.nextPageToken;
+      
+              } while (nextPageToken);
+      
+          } catch (error) {
+              console.error('Error:', error);
+          }
+          // console.log(Array.from(s));
+          for (const video of Array.from(s)) {
+              this.queueUp(video)
+          };
+      }
 
 
     // Function responsible for buffering the audio

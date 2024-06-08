@@ -62,9 +62,10 @@ module.exports = class AudioStream {
 
     // This is the function that handles placing the urls into the queue
     queueUp(url) {
+        console.log("here");
         // if it is a playlist, run the function that gets each of the URLs
         if(url.includes("playlist")){
-            this.extractVideoIds(url)
+            this.extractVideoIdsFromPlaylist(url)
         }else{
             // Otherwise we want to check if mpv array is less than 2, if it is, buffer it
             if (this.mpvs.length < 2) {
@@ -98,15 +99,15 @@ module.exports = class AudioStream {
         }
     }
 
-    async extractVideoIdsFromPlaylist(playlistUrl){
-        
+    async extractVideoIdsFromPlaylist(playlistUrl)
+    {
+        console.log(this.apiKey);
         const s = new Set();
         const urlParams = new URLSearchParams(new URL(playlistUrl).search);
         const playlistId = urlParams.get('list');
       
         let nextPageToken = '';
           
-          try {
               do {
                   // Fetch playlist items from the YouTube Data API
                   const response = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&pageToken=${nextPageToken}&key=${this.apiKey}`);
@@ -128,10 +129,7 @@ module.exports = class AudioStream {
       
               } while (nextPageToken);
       
-          } catch (error) {
-              console.error('Error:', error);
-          }
-          // console.log(Array.from(s));
+          console.log(Array.from(s));
           for (const video of Array.from(s)) {
               this.queueUp(video)
           };

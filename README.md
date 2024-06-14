@@ -1,4 +1,4 @@
-# In memory of Jessabele Delen Ramos
+# In memory of Jessabelle Delen Ramos
 
 ## **SCE Room Speakers**
 

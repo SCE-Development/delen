@@ -132,7 +132,7 @@ module.exports = class AudioStream {
             url.searchParams.set("part", "contentDetails");
             url.searchParams.set("playlistId", playlistId);
             url.searchParams.set("pageToken", nextPageToken);
-            url.searchParams.set("key", apiKey);
+            url.searchParams.set("key", this.apiKey);
 
             // Use the constructed URL in the fetch request
             const response = await fetch(url.href);

@@ -1,0 +1,49 @@
+version: "2"
+
+services:
+    speaker-api:
+        container_name: speaker-api
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        ports:
+            - "5000:5000"
+        restart: "on-failure"
+    cadvisor:
+        image: gcr.io/cadvisor/cadvisor:latest
+        container_name: cadvisor
+        restart: always
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /etc/localtime:/etc/timezone:ro
+            - /:/rootfs:ro
+            - /var/run:/var/run:rw
+            - /sys:/sys:ro
+            - /var/lib/docker/:/var/lib/docker:ro
+        devices:
+            - /dev/kmsg:/dev/kmsg
+        depends_on:
+            - speaker-api
+    prometheus:
+        image: prom/prometheus:latest
+        container_name: prometheus
+        restart: always
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /etc/localtime:/etc/timezone:ro
+            - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    grafana:
+        image: grafana/grafana:latest
+        container_name: grafana
+        restart: always
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /etc/timezone:/etc/timezone:ro
+            - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+            - ./grafana/provisioning:/etc/grafana/provisioning
+            - ./grafana/data:/var/lib/grafana
+        user: "1000"
+        depends_on:
+            - prometheus
+        ports:
+            - "3000:3000"

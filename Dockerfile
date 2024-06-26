@@ -8,8 +8,8 @@ COPY package-lock.json .
 
 RUN npm install
 
-COPY AudioStream.js .
+COPY *.js .
 
-EXPOSE 5000
+EXPOSE 8000
 
-CMD ["node", "AudioStream.js"]
+CMD ["node", "api.js"]

@@ -60,8 +60,13 @@ module.exports = class AudioStream {
     async addToQueue(url) {
         try {
             const info = await ytdl.getInfo(url);
+            // Extract the video title
             const title = info.videoDetails.title;
-            const mediaItem = { title, url };
+            // Extract the array of thumbnails
+            const thumbnails = info.videoDetails.thumbnails;
+            // Retrieve the URL of the largest thumbnail (usually the last one in the array)
+            const largestThumbnail = thumbnails[thumbnails.length - 1].url;
+            const mediaItem = { title, url, thumbnail: largestThumbnail };
             this.queue.push(mediaItem);
         } catch (error) {
             console.error("Error fetching video info:", error);

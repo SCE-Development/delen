@@ -57,7 +57,21 @@ module.exports = class AudioStream {
         return exec(`echo '{ "command": ["cycle", "pause"] }' | socat - /tmp/mpvsocket${this.current}`)
     }
 
-
+    async addToQueue(url) {
+        try {
+            const info = await ytdl.getInfo(url);
+            // Extract the video title
+            const title = info.videoDetails.title;
+            // Extract the array of thumbnails
+            const thumbnails = info.videoDetails.thumbnails;
+            // Retrieve the URL of the largest thumbnail (usually the last one in the array)
+            const largestThumbnail = thumbnails[thumbnails.length - 1].url;
+            const mediaItem = { title, url, thumbnail: largestThumbnail };
+            this.queue.push(mediaItem);
+        } catch (error) {
+            console.error("Error fetching video info:", error);
+        }
+    }
 
     // This is the function that handles placing the urls into the queue
     queueUp(url) {
@@ -73,7 +87,8 @@ module.exports = class AudioStream {
             else {
                 // otherwise just push it to the queue
                 console.log('second if')
-                this.queue.push(url)
+                // this.queue.push(url)
+                this.addToQueue(url);
                 console.log(this.queue)
             }
             // add to total queue for displaying 

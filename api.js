@@ -11,17 +11,57 @@ let audioStream = new AudioStream();
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-const gauge = new client.Gauge({
-  name: 'last_health_check_request',
-  help: 'checks the last time the health check was checked',
+// Define counter metrics
+const streamCounter = new client.Counter({
+    name: 'total_stream_endpoint_hits',
+    help: 'Total number of times the stream endpoint was hit',
 });
 
+const songsQueuedCounter = new client.Counter({
+  name: 'total_songs_queued',
+  help: 'Total number of songs queued',
+});
+
+const pauseCounter = new client.Counter({
+  name: 'total_pause_events',
+  help: 'Total number of times playback was paused',
+});
+
+const playCounter = new client.Counter({
+  name: 'total_play_events',
+  help: 'Total number of times playback was resumed',
+});
+
+const skipCounter = new client.Counter({
+  name: 'total_skip_events',
+  help: 'Total number of times playback was skipped',
+});
+
+const gauge = new client.Gauge({
+    name: 'last_health_check_request',
+    help: 'checks the last time the health check was checked',
+});
+
+register.registerMetric(streamCounter);
+register.registerMetric(songsQueuedCounter);
+register.registerMetric(pauseCounter);
+register.registerMetric(playCounter);
+register.registerMetric(skipCounter);
 register.registerMetric(gauge);
+
+register.setDefaultLabels ({
+    app: 'delen'
+});
+
 client.collectDefaultMetrics({ register });
 
 app.post('/stream', bodyParser.json(), async (req, res) => {
     const videoUrl = req.body.url;
     audioStream.queueUp(videoUrl);
+
+    // Increment the stream counter
+    streamCounter.inc();
+
     res.json({ playing: 'queued' });
 });
 
@@ -31,17 +71,24 @@ app.post('/togglePause', async (req, res) => {
 });
 
 app.get('/queued', async (req, res) => {
+    songsQueuedCounter.inc();
     return res.status(200).json({ queue: audioStream.getQueue() });
 });
 
 app.post('/skip', async (req, res) => {
     let resp = audioStream.skip();
-    if(resp == true) res.status(200).json({ 'resp ': resp });
+    if(resp == true){
+        // Increment the skip counter
+        skipCounter.inc();
+        res.status(200).json({ 'resp ': resp });
+    } 
     else res.status(500).json({'resp' : 'please wait 10 seconds before skipping'})
 });
 
 app.post('/pause', async (req, res) => {
     audioStream.pause();
+    // Increment the pause counter
+    pauseCounter.inc();
     res.status(200).json('Paused.');
 });
 
@@ -57,6 +104,8 @@ app.post('/forward', async (req, res) => {
 
 app.post('/resume', async (req, res) => {
     audioStream.resume();
+    // Increment the play counter after resuming
+    playCounter.inc();
     res.status(200).json('Resumed.');
 });
 

@@ -8,6 +8,7 @@ module.exports = class AudioStream {
     constructor() {
         this.mpvs = [] // buffered queue
         this.queue = [] // total queue
+
         this.total = 0 // used for pausing the buffered element
         this.isPlaying = false // used to check if playing
         this.current = 0 // used for pausing/playing
@@ -68,6 +69,7 @@ module.exports = class AudioStream {
             const largestThumbnail = thumbnails[thumbnails.length - 1].url;
             const mediaItem = { title, url, thumbnail: largestThumbnail };
             this.queue.push(mediaItem);
+            console.log(this.queue)
         } catch (error) {
             console.error("Error fetching video info:", error);
         }
@@ -81,15 +83,12 @@ module.exports = class AudioStream {
         }else{
             // Otherwise we want to check if mpv array is less than 2, if it is, buffer it
             if (this.mpvs.length < 2) {
-                console.log('first if')
                 this.buffer(url)
             }
             else {
                 // otherwise just push it to the queue
-                console.log('second if')
                 // this.queue.push(url)
                 this.addToQueue(url);
-                console.log(this.queue)
             }
             // add to total queue for displaying 
             this.totalQueue.push(url)
@@ -101,12 +100,9 @@ module.exports = class AudioStream {
         this.totalQueue.shift()
         if (tuple != null) {
             if (tuple[1]) {
-                console.log('in here ')
                 this.resume(tuple[1])
-                console.log(this.PIDs, '76')
             }
-            console.log(this.queue.length)
-            if (this.queue.length > 0) this.buffer(this.queue.shift())
+            if (this.queue.length > 0) this.buffer(this.queue.shift().url)
             if(!this.isPlaying) this.isPlaying = true
             this.current = tuple[1]
         }

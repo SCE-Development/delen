@@ -177,6 +177,10 @@ module.exports = class AudioStream {
             return true
         }
     }
+
+    setVolume(volume) {
+        return exec(`echo '{ "command": ["set_property", "volume", ${volume}] }' | socat - /tmp/mpvsocket${this.current}`)
+    }
     
     getTotal() {
         return this.total

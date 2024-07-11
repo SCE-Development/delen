@@ -60,6 +60,10 @@ app.post('/resume', async (req, res) => {
     res.status(200).json('Resumed.');
 });
 
+app.post('/volume', bodyParser.json(),async (req, res) => {
+    audioStream.setVolume(req.body.volume);
+    res.status(200).json(`Volume set to ${volume}%.`);
+});
 
 app.get('/total', async (req, res) => {
     res.json({ total: audioStream.getTotal() })

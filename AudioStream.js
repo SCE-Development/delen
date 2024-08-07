@@ -58,6 +58,49 @@ module.exports = class AudioStream {
         return exec(`echo '{ "command": ["cycle", "pause"] }' | socat - /tmp/mpvsocket${this.current}`)
     }
 
+    isName(str) {
+        let start_index = str.indexOf("}]},\"title\":{\"runs\":[{\"text\"");
+        if (start_index === -1) return true;
+        let isName = str.substring(start_index + 30);
+        isName = isName.substring(isName.indexOf('"'), isName.indexOf('"') + 24);
+        return isName.includes("navigationEndpoint");
+    }
+
+    async extractVideoInfo(url) {
+        if(url.includes("playlist")){
+            try {
+                let remainingOutput = await fetch(url).then(res => res.text());
+                while (remainingOutput.length > 0){
+                    try{
+                        const ind = remainingOutput.indexOf("videoId");
+                        const temp = remainingOutput.substring(ind, ind + 1500);
+    
+                        if (isName(temp)) throw new Error("Is a name pass");
+                        let videoId = temp.substring(temp.indexOf('"') + 3, temp.indexOf('"') + 20);
+                        videoId = videoId.substring(0, videoId.indexOf('"'));
+    
+                        let thumbnail = temp.substring(temp.indexOf("thumbnails\":[{\"url\"") + 21, temp.indexOf("thumbnails\":[{\"url\"") + 221);
+                        thumbnail = thumbnail.substring(0, thumbnail.indexOf('"'));
+                
+                        let title = temp.substring(temp.indexOf("}]},\"title\":{\"runs\":[{\"text\"") + 30, temp.indexOf("}]},\"title\":{\"runs\":[{\"text\"") + 145);
+                        title = title.substring(0, title.indexOf('"'));
+    
+                        remainingOutput = remainingOutput.substring(ind + 1500);
+    
+                        const mediaItem = { title, url, thumbnail};
+                        this.queue.push(mediaItem);
+                    }
+                    catch{
+                        remainingOutput = remainingOutput.substring(300);
+                    }
+                }
+            }
+            catch (error) {
+                console.error("Error fetching video info:", error);
+            }
+        }
+    }
+
     async addToQueue(url) {
         try {
             const info = await ytdl.getInfo(url);

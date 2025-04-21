@@ -1,12 +1,14 @@
 import subprocess
-import queue
-import time
-import sys
+import argparse
+from datetime import datetime
+
+MAX_URL_DISPLAY_LENGTH = 50
+
+# Open error log file in append mode
+def get_error_logger():
+    return open('errors.log', 'a')
 
 def get_youtube_audio_urls(playlist_url):
-    # Create a list to store the URLs
-    audio_urls = []
-    
     # Run the yt-dlp command and capture its output
     command = f'yt-dlp -f bestaudio -g "{playlist_url}"'
     try:
@@ -15,7 +17,11 @@ def get_youtube_audio_urls(playlist_url):
         
         # Check for errors
         if process.returncode != 0:
-            print(f"Error extracting URLs: {stderr.decode('utf-8')}")
+            error_msg = f"[{datetime.now()}] Error extracting URLs: {stderr.decode('utf-8')}"
+            print(error_msg)
+            with get_error_logger() as error_log:
+                error_log.write(error_msg + '\n')
+                error_log.flush()
             return []
         
         # Decode the output and split by newlines to get individual URLs
@@ -25,7 +31,11 @@ def get_youtube_audio_urls(playlist_url):
         print(f"Found {len(urls)} audio URLs")
         return urls
     except Exception as e:
-        print(f"Exception while extracting URLs: {str(e)}")
+        error_msg = f"[{datetime.now()}] Exception while extracting URLs: {str(e)}"
+        print(error_msg)
+        with get_error_logger() as error_log:
+            error_log.write(error_msg + '\n')
+            error_log.flush()
         return []
 
 def mpv_queue(audio_urls):
@@ -47,7 +57,7 @@ def mpv_queue(audio_urls):
         audio_url = playing_queue.pop(0)  # Get the next URL
         played_count += 1
         
-        print(f"Playing video {played_count}/{total_count}: {audio_url[:50]}...")
+        print(f"Playing video {played_count}/{total_count}: {audio_url[:MAX_URL_DISPLAY_LENGTH]}...")
         
         try:
             # Play the audio
@@ -61,13 +71,24 @@ def mpv_queue(audio_urls):
                 playing_queue.append(next_url)
                 print(f"Added next video to queue. Remaining: {len(remaining_queue)}")
         except Exception as e:
-            print(f"Error playing {audio_url[:50]}: {str(e)}")
+            error_msg = f"[{datetime.now()}] Error playing {audio_url[:MAX_URL_DISPLAY_LENGTH]}: {str(e)}"
+            print(error_msg)
+            with get_error_logger() as error_log:
+                error_log.write(error_msg + '\n')
+                error_log.flush()
             # If an error occurs, still try to continue with the next URL
             continue
     
     print(f"Finished playing {played_count}/{total_count} videos")
 
+# This function parses command line arguments
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Play audio from YouTube playlists using mpv')
+    parser.add_argument('--url', '-u', type=str, required=True,
+                        help='YouTube playlist URL to extract audio from')
+    return parser.parse_args()
+
 if __name__ == "__main__":
-    playlist_url = 'https://www.youtube.com/playlist?list=PLyLqO_HeaCB5QxDs04P0un3SAyfGYS-GW'
-    audio_urls = get_youtube_audio_urls(playlist_url)
+    args = parse_arguments()
+    audio_urls = get_youtube_audio_urls(args.url)
     mpv_queue(audio_urls)

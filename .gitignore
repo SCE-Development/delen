@@ -1,3 +1,15 @@
 node_modules/
 
 config.json
+
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs
+errors.log

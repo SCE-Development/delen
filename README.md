@@ -30,3 +30,9 @@ ctl.!default ctl.custom
 Copy this into ~/.asoundrc or wherever your alsa sound file is configured
 
 `sudo alsactl --no-ucm store`
+
+#### Installation for testing speaker cli
+
+Install dependencies:
+```bash
+pip install -r requirements.txt
